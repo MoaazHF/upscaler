@@ -22,5 +22,10 @@
 - Undo: skip to Phase 1.
 
 ## D5 — Human code review, co-authored commits (2026-10-23)
-- Choice: no AI reviewer agent; a human reviews and merges every PR. Every commit carries `Co-authored-by: Claude <noreply@anthropic.com>`, kept through squash merges.
+- Choice: no AI reviewer agent; a human reviews and merges every PR. Every commit carries `Co-authored-by: Claude <noreply@anthropic.com>` (history rules in D6).
 - Why: the maintainer wants co-authored commits on merged PRs (GitHub "Pair Extraordinaire").
+
+## D6 — Merge commits only, no squashing (2026-10-23)
+- Context: the maintainer wants every commit kept in history and counted.
+- Choice: squash and rebase merges are disabled on the repo; linear history is off on `dev`. The merge commit's title is the PR title and its message is the PR body, which ends with the `Co-authored-by` trailer.
+- Undo: re-enable squash merge in repo settings.

@@ -199,7 +199,7 @@ There is no AI reviewer agent. The author never approves or merges its own PR. I
 
 ### Branches
 - `main`: released, always green, one tagged release per completed phase (`v0.<phase>.0`). Protected: PR required, no force-push, no deletion.
-- `dev`: integration and on-device testing. Protected: PR required, human review before merge, linear history.
+- `dev`: integration and on-device testing. Protected: PR required, human review before merge, merge commits only.
 - Work branches always come from an up-to-date `dev`: `git switch dev && git pull --ff-only && git switch -c <type>/<scope>-<slug>`
   - Types: `feature/`, `fix/`, `perf/`, `refactor/`, `test/`, `docs/`, `chore/`, `build/`. Example: `feature/engine-tiler-overlap`, `perf/engine-double-buffer`.
   - One task (§10) = one branch = one PR. Don't stack a feature on another unmerged feature unless it truly depends on it; if it does, say so in the PR body and target the parent branch.
@@ -214,8 +214,8 @@ There is no AI reviewer agent. The author never approves or merges its own PR. I
 - Never commit: `.tflite`/`.pt` weights (fetch with `tools/fetch_models.sh` + checksums), build dirs, keystores, `local.properties`, large test outputs. Test images under 1 MB each can be committed; anything larger needs Git LFS, ask first.
 - **Co-author trailer is mandatory** on every commit. Leave a blank line after the body, then the last line is exactly
   `Co-authored-by: Claude <noreply@anthropic.com>`.
-  The commit author is my git identity, and its email must be verified on GitHub account `MoaazHF`. Check with `git config user.email` against `gh api user/emails`. Squash merges must keep the trailer: merge with `gh pr merge --squash --body "<summary>\n\nCo-authored-by: Claude <noreply@anthropic.com>"` and confirm it with `git log -1 --format=%B origin/dev`. This is what earns the GitHub "Pair Extraordinaire" achievement (co-authored commits on merged PRs).
-- Clean up before review: `git commit --fixup <sha>` then `GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash origin/dev` (runs without an editor).
+  The commit author is my git identity, and its email must be verified on GitHub account `MoaazHF`. Check with `git config user.email` against `gh api user/emails`. Merge with `gh pr merge --merge --body "<summary>\n\nCo-authored-by: Claude <noreply@anthropic.com>"`, so the merge commit carries the trailer too. Confirm with `git log --format='%h %s%n%(trailers:key=Co-authored-by)' origin/dev`. This is what earns the GitHub "Pair Extraordinaire" achievement (co-authored commits on merged PRs).
+- **No squashing, ever.** Every commit is kept: no squash merges, no autosquash, no `reset --soft` recommits. Review fixes go in new commits. Each commit must still be clean (atomic, builds, Conventional Commit message), because it stays in history forever.
 
 ### Pull requests
 - Open with `gh pr create --base dev`, with a body that follows `.github/pull_request_template.md`:
@@ -231,7 +231,7 @@ There is no AI reviewer agent. The author never approves or merges its own PR. I
 - Size: aim for ≤ 400 changed lines excluding generated files. Larger PRs get split unless the reviewer agrees.
 - Required checks before asking for review (local until CI exists; a GitHub Actions CI is an optional later task, ask me):
   `./gradlew :app:lintDebug :engine:testDebugUnitTest assembleDebug`, host C++ tests via `ctest`, `clang-format --dry-run -Werror`, `ruff check tools/`.
-- Merge `feature → dev` with **squash merge**, PR title as the commit message, so `dev` gets one Conventional Commit per PR.
+- Merge `feature → dev` with a **merge commit** (squash and rebase merges are disabled on the repo). All branch commits keep their SHAs. The repo sets the merge commit's title to the PR title and its message to the PR body, so every PR body ends with the `Co-authored-by` trailer line.
 - Release `dev → main` at the end of each phase via a PR titled `release: phase N`. Use a **merge commit** (keeps history traceable to `dev`), then `git tag -a v0.N.0` on `main` and push the tag. Only after I approve.
 - Hotfix: `hotfix/<slug>` from `main` → PR to `main` → then merge `main` back into `dev`.
 

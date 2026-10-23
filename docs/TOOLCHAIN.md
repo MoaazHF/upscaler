@@ -21,11 +21,20 @@ Recorded 2026-10-23, Phase 0 (Task 0.1/0.2). Pinned versions are the source of t
 | git | 2.43.0, `MoaazHf <moazhasanfarouk@gmail.com>` | email linked to GitHub `MoaazHF`, so co-author trailers count |
 | gh | 2.98.0, logged in as `MoaazHF` | — |
 
-## Device
+## Device (probed 2026-10-23, read-only over adb)
 | Item | Value |
 |---|---|
-| `adb devices -l` | **no device**; `lsusb` sees no Google USB device (cable/USB mode issue, not adb) |
-| SDK level, `ro.product.device`, `ro.soc.model`, `/vendor/lib64/libOpenCL*` | pending |
+| Model / device | Pixel 7 Pro, `cheetah`, serial `28251FDH300GA8`, USB `18d1:4ee7` |
+| Android | 17, SDK 37, build `CP3A.261005.002.A1` |
+| SoC | `ro.soc.model=GS201` (Tensor G2), `ro.soc.manufacturer=Google` |
+| ABI / page size | arm64-v8a / 4096 B |
+| RAM | 11.2 GiB (`MemTotal 11743508 kB`) |
+| Free storage `/data` | 28 GB |
+| GPU libs | `/vendor/lib64/libOpenCL.so`, `libOpenCL-pixel.so`, `egl/libGLES_mali.so` |
+| `/vendor/etc/public.libraries.txt` | lists **`libOpenCL.so`**, `libOpenCL-pixel.so`, **`libedgetpu_client.google.so`** |
+| Thermal status at idle | 0 (none) |
 
-## Install method
-Android Studio manages the SDK through its SDK Manager. The agent builds from the terminal with `./gradlew` against the same SDK. Studio writes `sdk.dir` into `local.properties` (git-ignored).
+Notes:
+- R2 (OpenCL unreachable from apps) is likely mitigated: `libOpenCL.so` is a vendor *public* library, so an app may load it after declaring `<uses-native-library android:name="libOpenCL.so" android:required="false"/>`. Still to confirm from an app process in Phase 0.5.
+- `libedgetpu_client.google.so` is also public. It is a possible NPU route, but its API is undocumented; Phase 0.5 checks whether LiteRT uses it.
+- The device runs Android 17 (SDK 37), so `compileSdk/targetSdk 37` matches the installed `platforms;android-37.0`.
