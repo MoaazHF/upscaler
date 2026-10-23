@@ -18,7 +18,7 @@ Recorded 2026-10-23, Phase 0 (Task 0.1/0.2). Pinned versions are the source of t
 | CMake | SDK 3.22.1, **4.1.2**; system 3.28.3 | pin `4.1.2`. Any third-party dep with `cmake_minimum_required(<3.5)` gets `-DCMAKE_POLICY_VERSION_MINIMUM=3.5` |
 | Ninja | 1.11.1 (SDK CMake bundles its own) | keep |
 | ccache | 4.9.1 (apt) | keep |
-| git | 2.43.0, `MoaazHf <moazhasanfarouk@gmail.com>` | email linked to GitHub `MoaazHF`, so co-author trailers count |
+| git | 2.43.0; repo-local identity `MoaazHF <183323119+MoaazHF@users.noreply.github.com>` | GitHub noreply address (user id 183323119), so commits attribute to `MoaazHF` without exposing a personal email |
 | gh | 2.98.0, logged in as `MoaazHF` | — |
 
 ## Device (probed 2026-10-23, read-only over adb)
