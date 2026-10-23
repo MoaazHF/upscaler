@@ -29,3 +29,8 @@
 - Context: the maintainer wants every commit kept in history and counted.
 - Choice: squash and rebase merges are disabled on the repo; linear history is off on `dev`. The merge commit's title is the PR title and its message is the PR body, which ends with the `Co-authored-by` trailer.
 - Undo: re-enable squash merge in repo settings.
+
+## D7 — Commit identity: GitHub noreply address (2026-10-23)
+- Choice: repo-local `user.name=MoaazHF`, `user.email=183323119+MoaazHF@users.noreply.github.com`. Commits still attribute to `MoaazHF` (contributions, co-author achievements) without publishing a personal email.
+- Note: commits before this decision keep their original emails; they're on protected branches and are not rewritten.
+- Undo: `git config --unset user.email` in the repo.
