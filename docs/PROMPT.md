@@ -29,7 +29,8 @@ Hard rules (apply in every phase):
 | Memory sizing | Budget for the **8 GB** variants, not the 12 GB Pro |
 | Form factors | Foldable posture changes and tablet widths: the UI uses window size classes, and jobs survive Activity recreation (WorkManager owns the job, not the Activity) |
 | ABI | `abiFilters += "arm64-v8a"`; no other ABIs built anywhere |
-| Perf target (set after Phase 2) | 12 MP → 2x total wall time ≤ T₂, 4x ≤ T₄, written down as numbers once measured |
+| Perf target (set in Phase 0.5, `docs/BENCHMARKS.md`) | 12 MP end-to-end: **2x ≤ 20 s, 4x ≤ 60 s** on the Pixel 7 Pro. Measured inference alone: 4x ≈ 29 s cool / 48 s throttled |
+| Main path (Phase 0.5 verdict) | GPU OpenCL, FP16 compute, `body` model variant (conv/PReLU only; PixelShuffle + residual natively), tile 384. No NPU: LiteRT's Tensor NPU path covers G5/G6 only |
 | Memory | peak PSS ≤ 600 MB on any input; no OOM or LMK kill on a 12 MP 4x request (clean fallback is acceptable) |
 | Quality | tiled `.tflite` vs untiled PyTorch: PSNR ≥ 40 dB (FP16), ≥ 45 dB (FP32); no seam is detectable by the seam metric (§6) |
 | Thermals | 5 consecutive 12 MP 2x jobs finish without `THERMAL_STATUS_SEVERE` and without user-visible stalls > 2 s |
@@ -53,6 +54,8 @@ Hard rules (apply in every phase):
 | R5 | Output size: 12 MP × 4x = 192 MP. RGBA8 alone is 768 MB | OOM / LMK | Streaming encoder + size cap (P3) |
 | R6 | Thermal throttling on sustained GPU load | Throughput collapses after ~30–60 s | 120 s sustained benchmark (P2) |
 | R7 | Pixel Ultra HDR JPEGs (gain map) and Display P3 inputs | Color shift, lost HDR | Explicit v1 policy: convert to sRGB, drop the gain map, record it in DECISIONS (P3) |
+
+Phase 0.5 outcome: R1 closed (no NPU for G2), R2 closed (OpenCL loads in an app process), R3 closed (body variant: 166/166 ops on GPU, 1 partition). Open: R4 (GPU FP16 compute accuracy, Phase 3 gate ≥ 40 dB), R6 (throttles after ~100 s, up to +70% tile time). Details in `docs/BENCHMARKS.md`.
 
 ## 5. Models
 - **Default ("Fast"):** `realesr-general-x4v3` (SRVGGNetCompact, ~1.2 M params) from the official Real-ESRGAN GitHub release. Record the SHA-256 and the license (BSD-3 **[VERIFY]**) in `models/LICENSES.md`.
