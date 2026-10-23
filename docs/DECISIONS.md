@@ -39,3 +39,14 @@
 - Context: the owner delegated review and merge to the implementing agent ("you merge and review on your own").
 - Choice: the agent re-reads the diff, re-runs verification, posts a checklist review comment, then merges with a merge commit, including the `dev → main` release PRs and tags. Phase gates still wait for the owner's `go`. Supersedes the reviewer role in D5.
 - Undo: set `required_approving_review_count: 1` on `dev`/`main` and review as the owner again.
+
+## D9 — GPU FP16 main path, body model variant, tile 384 (2026-10-23)
+- Context: Phase 0.5 measured CPU/GPU on the Pixel 7 Pro (`docs/BENCHMARKS.md`). LiteRT's Tensor NPU path covers only Tensor G5/G6.
+- Choice: GPU (OpenCL) with FP16 compute; the model is the `body` variant (conv + PReLU as max/min, 48-channel output), with PixelShuffle and the nearest-upsample residual done in the native post-process; tile 384 (416 k useful px/s, 217 MB GPU footprint).
+- Why: the full graph leaves 5 ops on the CPU (2 partitions, ~1.9x slower). Tile 384 gets 94% of tile 512's throughput for 87 MB less memory on 8 GB devices.
+- Undo: `tools/convert.py --variant full`; other tile sizes are one converter flag away.
+
+## D10 — No INT8 (2026-10-23)
+- Context: INT8 dynamic-range PSNR is 36.5 dB min vs fp32 (floor 38 dB), and there's no NPU to justify it.
+- Choice: ship FP32-stored weights (or FP16 weights to halve the asset); GPU computes in FP16.
+- Undo: `tools/convert.py` still emits `int8dyn` files.

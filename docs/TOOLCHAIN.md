@@ -38,3 +38,18 @@ Notes:
 - R2 (OpenCL unreachable from apps) is likely mitigated: `libOpenCL.so` is a vendor *public* library, so an app may load it after declaring `<uses-native-library android:name="libOpenCL.so" android:required="false"/>`. Still to confirm from an app process in Phase 0.5.
 - `libedgetpu_client.google.so` is also public. It is a possible NPU route, but its API is undocumented; Phase 0.5 checks whether LiteRT uses it.
 - The device runs Android 17 (SDK 37), so `compileSdk/targetSdk 37` matches the installed `platforms;android-37.0`.
+
+## Python tooling (Phase 0.5)
+| Item | Version |
+|---|---|
+| venv | `tools/.venv` (Python 3.12.3), lock: `tools/requirements.lock.txt` (uses the PyTorch CPU index) |
+| torch | 2.11.0+cpu (litert-torch's torchao needs ≥ 2.11) |
+| litert-torch | 0.9.2 (0.10.0 skipped: released 3 days before, too new) |
+| ai-edge-litert / ai-edge-quantizer / litert-converter | 2.1.6 / 0.8.0 / 0.3.1 |
+| Model weights | `realesr-general-x4v3.pth`, Real-ESRGAN v0.2.5.0, BSD-3-Clause, sha256 `8dc7edb9ac80ccdc30c3a5dca6616509367f05fbc184ad95b731f05bece96292` |
+
+## On-device tools
+| Item | Version |
+|---|---|
+| LiteRT `benchmark_model` | 2.3.0 android_arm64, https://storage.googleapis.com/litert/binaries/2.3.0/android_arm64/benchmark_model, sha256 `844d518d490a42e73472477f9f793605d24ed95c77c9ab55d55614dc68d52b7a`. GPU precision flag is `--gpu-precision=fp16|fp32` (hyphen); default fp16 |
+| Gradle / AGP (probe app) | 9.8.1 (cached locally) / 9.4.0 (latest stable, requires Gradle ≥ 9.6, max API 37) |
