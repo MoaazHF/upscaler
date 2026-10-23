@@ -192,14 +192,14 @@ Put a checkpoint after every 2–3 tasks: build green, tests green, the device c
 ### Roles
 | Role | Who | Can |
 |---|---|---|
-| Author | implementing agent | branch, commit, push its own branch, open PRs into `dev`, address review comments |
-| Reviewer + maintainer | human code reviewer (me, or the reviewer I name) | review, approve or request changes, merge into `dev`, approve release PRs `dev → main`, change protection rules |
+| Author + reviewer + merger | implementing agent (Claude) | branch, commit, push, open PRs, review its own PR against the checklist, merge into `dev`, open and merge release PRs `dev → main`, tag releases |
+| Owner | me | can step in on any PR; changes protection rules; decides phase gates (`go`) |
 
-There is no AI reviewer agent. The author never approves or merges its own PR. It opens the PR, fills in the template, and waits for a human review. If the reviewer uses a separate GitHub account, `dev` requires 1 approving review. If the agent pushes under the reviewer's own account, GitHub blocks self-approval, so `dev` requires a PR without a required approval, and the reviewer approves by merging.
+There is no separate reviewer agent. Before merging, the agent re-reads the full diff (`gh pr diff N`), re-runs the verify commands, and posts its review as a PR comment (`gh pr review N --comment`) listing each checklist item and any `blocker`/`should-fix`/`nit`. A blocker means fix commits first, then a re-review, then the merge. GitHub blocks self-approval on the same account, so `dev` and `main` require a PR with 0 approvals. Phase gates still stop for my `go`; merging a PR never starts the next phase.
 
 ### Branches
 - `main`: released, always green, one tagged release per completed phase (`v0.<phase>.0`). Protected: PR required, no force-push, no deletion.
-- `dev`: integration and on-device testing. Protected: PR required, human review before merge, linear history.
+- `dev`: integration and on-device testing. Protected: PR required, review comment before merge, merge commits only.
 - Work branches always come from an up-to-date `dev`: `git switch dev && git pull --ff-only && git switch -c <type>/<scope>-<slug>`
   - Types: `feature/`, `fix/`, `perf/`, `refactor/`, `test/`, `docs/`, `chore/`, `build/`. Example: `feature/engine-tiler-overlap`, `perf/engine-double-buffer`.
   - One task (§10) = one branch = one PR. Don't stack a feature on another unmerged feature unless it truly depends on it; if it does, say so in the PR body and target the parent branch.
@@ -214,8 +214,8 @@ There is no AI reviewer agent. The author never approves or merges its own PR. I
 - Never commit: `.tflite`/`.pt` weights (fetch with `tools/fetch_models.sh` + checksums), build dirs, keystores, `local.properties`, large test outputs. Test images under 1 MB each can be committed; anything larger needs Git LFS, ask first.
 - **Co-author trailer is mandatory** on every commit. Leave a blank line after the body, then the last line is exactly
   `Co-authored-by: Claude <noreply@anthropic.com>`.
-  The commit author is my git identity, and its email must be verified on GitHub account `MoaazHF`. Check with `git config user.email` against `gh api user/emails`. Squash merges must keep the trailer: merge with `gh pr merge --squash --body "<summary>\n\nCo-authored-by: Claude <noreply@anthropic.com>"` and confirm it with `git log -1 --format=%B origin/dev`. This is what earns the GitHub "Pair Extraordinaire" achievement (co-authored commits on merged PRs).
-- Clean up before review: `git commit --fixup <sha>` then `GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash origin/dev` (runs without an editor).
+  The commit author is `MoaazHF <183323119+MoaazHF@users.noreply.github.com>`, set repo-locally with `git config user.name/user.email`. Check it before every commit with `git config user.email`; a personal email in a new commit is a bug. Merge with `gh pr merge --merge --body "<summary>\n\nCo-authored-by: Claude <noreply@anthropic.com>"`, so the merge commit carries the trailer too. Confirm with `git log --format='%h %s%n%(trailers:key=Co-authored-by)' origin/dev`. This is what earns the GitHub "Pair Extraordinaire" achievement (co-authored commits on merged PRs).
+- **No squashing, ever.** Every commit is kept: no squash merges, no autosquash, no `reset --soft` recommits. Review fixes go in new commits. Each commit must still be clean (atomic, builds, Conventional Commit message), because it stays in history forever.
 
 ### Pull requests
 - Open with `gh pr create --base dev`, with a body that follows `.github/pull_request_template.md`:
@@ -231,11 +231,11 @@ There is no AI reviewer agent. The author never approves or merges its own PR. I
 - Size: aim for ≤ 400 changed lines excluding generated files. Larger PRs get split unless the reviewer agrees.
 - Required checks before asking for review (local until CI exists; a GitHub Actions CI is an optional later task, ask me):
   `./gradlew :app:lintDebug :engine:testDebugUnitTest assembleDebug`, host C++ tests via `ctest`, `clang-format --dry-run -Werror`, `ruff check tools/`.
-- Merge `feature → dev` with **squash merge**, PR title as the commit message, so `dev` gets one Conventional Commit per PR.
-- Release `dev → main` at the end of each phase via a PR titled `release: phase N`. Use a **merge commit** (keeps history traceable to `dev`), then `git tag -a v0.N.0` on `main` and push the tag. Only after I approve.
+- Merge `feature → dev` with a **merge commit** (squash and rebase merges are disabled on the repo). All branch commits keep their SHAs. The repo sets the merge commit's title to the PR title and its message to the PR body, so every PR body ends with the `Co-authored-by` trailer line.
+- Release `dev → main` at the end of each phase via a PR titled `release: phase N`. Use a **merge commit** (keeps history traceable to `dev`), then `git tag -a v0.N.0` on `main` and push the tag. The agent does this itself once the phase's Done criteria are verified.
 - Hotfix: `hotfix/<slug>` from `main` → PR to `main` → then merge `main` back into `dev`.
 
-### Review checklist (the author self-checks each item in the PR body; the human reviewer verifies)
+### Review checklist (ticked in the PR body, verified again in the review comment)
 1. Correctness vs the task's acceptance criteria; the verify commands were re-run, not just read.
 2. Hot-loop rules (§7): no allocations, no extra copies, NEON vs scalar test present.
 3. JNI: no leaked local/global refs, exceptions checked, no JNI calls on the inference thread.

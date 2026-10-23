@@ -22,5 +22,20 @@
 - Undo: skip to Phase 1.
 
 ## D5 — Human code review, co-authored commits (2026-10-23)
-- Choice: no AI reviewer agent; a human reviews and merges every PR. Every commit carries `Co-authored-by: Claude <noreply@anthropic.com>`, kept through squash merges.
+- Choice (superseded by D8): no AI reviewer agent; a human reviews and merges every PR. Every commit carries `Co-authored-by: Claude <noreply@anthropic.com>` (history rules in D6).
 - Why: the maintainer wants co-authored commits on merged PRs (GitHub "Pair Extraordinaire").
+
+## D6 — Merge commits only, no squashing (2026-10-23)
+- Context: the maintainer wants every commit kept in history and counted.
+- Choice: squash and rebase merges are disabled on the repo; linear history is off on `dev`. The merge commit's title is the PR title and its message is the PR body, which ends with the `Co-authored-by` trailer.
+- Undo: re-enable squash merge in repo settings.
+
+## D7 — Commit identity: GitHub noreply address (2026-10-23)
+- Choice: repo-local `user.name=MoaazHF`, `user.email=183323119+MoaazHF@users.noreply.github.com`. Commits still attribute to `MoaazHF` (contributions, co-author achievements) without publishing a personal email.
+- Note: commits before this decision keep their original emails; they're on protected branches and are not rewritten.
+- Undo: `git config --unset user.email` in the repo.
+
+## D8 — Agent reviews and merges its own PRs (2026-10-23)
+- Context: the owner delegated review and merge to the implementing agent ("you merge and review on your own").
+- Choice: the agent re-reads the diff, re-runs verification, posts a checklist review comment, then merges with a merge commit, including the `dev → main` release PRs and tags. Phase gates still wait for the owner's `go`. Supersedes the reviewer role in D5.
+- Undo: set `required_approving_review_count: 1` on `dev`/`main` and review as the owner again.
