@@ -1,0 +1,32 @@
+# Gradle / Android
+.gradle/
+build/
+.cxx/
+.externalNativeBuild/
+local.properties
+captures/
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Python
+tools/.venv/
+__pycache__/
+*.pyc
+
+# Models and outputs (fetched / generated, never committed)
+models/*.tflite
+models/*.pt
+models/*.pth
+out/
+
+# Local agent / tool state
+.claude/
+.remember/
+.agents/
