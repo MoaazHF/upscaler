@@ -34,7 +34,7 @@ The full-model CPU rows and the GPU fp32 rows were taken back to back; the phone
 ### GPU fp16 throughput by tile (body variant, thermal status 0 before every run)
 | Tile | ms/tile | raw input px/s | useful px/s (16 px overlap each side) | GPU footprint |
 |---|---|---|---|---|
-| 128 | 40.0 | 410 k | 231 k | 127 MB |
+| 128 | 40.0 | 410 k | 230 k | 127 MB |
 | 192 | 79.4 | 464 k | 322 k | 139 MB |
 | 256 | 136.3 | 481 k | 368 k | 155 MB |
 | **384** | **298.2** | **494 k** | **416 k** | **217 MB** |
